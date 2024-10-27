@@ -18,24 +18,42 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.geecee.subliminal.R
 import com.geecee.subliminal.ui.theme.SubliminalTheme
+import com.geecee.subliminal.ui.views.refreshSets
+import com.geecee.subliminal.utils.Set
+import com.geecee.subliminal.utils.deleteSet
+import com.geecee.subliminal.utils.duplicateSet
+import com.geecee.subliminal.utils.renameSet
 
 data class CarouselItem(
     val id: Int,
@@ -127,9 +145,25 @@ fun PrevHomeScreenMessage() {
     }
 }
 
-
 @Composable
-fun SetPreview(set: com.geecee.subliminal.utils.Set) {
+fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val showRenameDialog = remember { mutableStateOf(false) }
+
+    if (showRenameDialog.value) {
+        TextboxDialog(
+            showRenameDialog,
+            "Rename Set",
+            "Type here..",
+            "Rename",
+            "Cancel"
+        ) { newName ->
+            renameSet(context, set.title, newName)
+            refreshSets(context,sets)
+        }
+    }
     Column(
         Modifier
             .clip(MaterialTheme.shapes.extraLarge)
@@ -137,11 +171,15 @@ fun SetPreview(set: com.geecee.subliminal.utils.Set) {
             .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Box(
-            Modifier.fillMaxWidth().padding(20.dp,20.dp,20.dp,10.dp)
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp, 20.dp, 20.dp, 10.dp)
         ) {
+
+
             // Left-aligned text
             Text(
-                set.title,
+                trimTo25Characters(set.title),
                 Modifier.align(Alignment.CenterStart),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -149,46 +187,123 @@ fun SetPreview(set: com.geecee.subliminal.utils.Set) {
             )
 
             // Right-aligned icon
-            Icon(
-                imageVector = Icons.Rounded.MoreVert,
-                contentDescription = null,
+            Column(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .size(24.dp),
-                tint = Color.White
-            )
+            ) {
+                IconButton(
+                    { menuExpanded = true },
+                    modifier = Modifier
+                        .size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(onClick = {
+                        showRenameDialog.value = true
+                    }, text = {
+                        Text("Rename")
+                    })
+                    DropdownMenuItem(onClick = {
+                        deleteSet(context, set.title)
+                        refreshSets(context,sets)
+                    }, text = {
+                        Text("Delete")
+                    })
+                    DropdownMenuItem(onClick = {
+                        duplicateSet(context, set.title, "Copy Of " + set.title, sets)
+                    }, text = {
+                        Text("Duplicate")
+                    })
+                }
+            }
         }
 
         var mainText = ""
-        set.cards.forEach{card->
+        set.cards.forEach { card ->
             mainText += card.content + ", "
         }
 
         Text(
             mainText,
-            Modifier.padding(20.dp,0.dp,20.dp,20.dp),
+            Modifier.padding(20.dp, 0.dp, 20.dp, 20.dp),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Normal,
             color = Color.White
         )
     }
+}
 
+@Composable
+fun TextboxDialog(
+    showDialog: MutableState<Boolean>,
+    title: String,
+    placeholder: String,
+    submit: String,
+    cancel: String,
+    onSubmit: (output: String) -> Unit
+) {
+    var textState by remember { mutableStateOf(TextFieldValue("")) }
+
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        title = {
+            Text(
+                title,
+                Modifier,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                TextField(
+                    value = textState,
+                    onValueChange = { textState = it },
+                    placeholder = { Text(placeholder) }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                showDialog.value = false
+                onSubmit(textState.text)
+            }) {
+                Text(submit)
+            }
+        },
+        dismissButton = {
+            Button(onClick = {
+                showDialog.value = false
+            }) {
+                Text(cancel)
+            }
+        }
+    )
 }
 
 @Preview
 @Composable
-fun PrevSetPreview() {
+fun PrevTextboxDialog() {
     SubliminalTheme {
-        SetPreview(
-            com.geecee.subliminal.utils.Set(
-                "Test Set",
-                listOf(
-                    com.geecee.subliminal.utils.Card("Some text"),
-                    com.geecee.subliminal.utils.Card("Some more text"),
-                    com.geecee.subliminal.utils.Card("Some even more text"),
-                    com.geecee.subliminal.utils.Card("Some final text", "An answer")
-                )
-            )
-        )
+        val showDialog = remember { mutableStateOf(false) }
+
+        TextboxDialog(showDialog, "Enter Set Title", "Type here..", "Done", "Cancel") {}
+    }
+}
+
+fun trimTo25Characters(text: String): String {
+    return if (text.length > 25) {
+        text.take(25) + "..."
+    } else {
+        text
     }
 }
