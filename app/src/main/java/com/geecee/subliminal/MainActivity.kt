@@ -1,22 +1,19 @@
 package com.geecee.subliminal
 
-import android.graphics.Color
-import android.os.Build
+import android.graphics.Color.TRANSPARENT
 import android.os.Bundle
-import android.view.View
-import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -29,22 +26,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.geecee.subliminal.ui.theme.SubliminalTheme
 import com.geecee.subliminal.ui.views.HomePage
+import com.geecee.subliminal.ui.views.SetsPage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(SystemBarStyle.auto(Color.TRANSPARENT,Color.TRANSPARENT))
+        enableEdgeToEdge(SystemBarStyle.auto(TRANSPARENT,TRANSPARENT))
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            window.insetsController?.hide(WindowInsets.Type.statusBars())
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+        val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+        insetsController.apply {
+            hide(WindowInsetsCompat.Type.statusBars())
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
         setContent {
@@ -60,7 +60,7 @@ fun MainNavigation() {
     var selectedItem by remember { mutableIntStateOf(0) }
     val items = listOf("Home", "Sets", "Options")
     val selectedIcons =
-        listOf(Icons.Rounded.Home, Icons.AutoMirrored.Rounded.List, Icons.Rounded.Settings)
+        listOf(Icons.Filled.Home, Icons.AutoMirrored.Filled.List, Icons.Filled.Settings)
     val unselectedIcons =
         listOf(Icons.Outlined.Home, Icons.AutoMirrored.Outlined.List, Icons.Outlined.Settings)
     val navController = rememberNavController()
@@ -78,7 +78,8 @@ fun MainNavigation() {
                             )
                         },
                         label = {
-                            Text(item)
+                            Text(item,
+                                style = com.geecee.subliminal.ui.theme.Typography.bodyMedium)
                         },
                         alwaysShowLabel = false,
                         selected = selectedItem == index,
@@ -96,6 +97,7 @@ fun MainNavigation() {
                 HomePage()
             }
             composable("Sets"){
+                SetsPage()
             }
             composable("Options"){
             }

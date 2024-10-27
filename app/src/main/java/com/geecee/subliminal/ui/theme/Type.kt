@@ -30,8 +30,9 @@ val Typography = Typography(
     ),
     headlineLarge = TextStyle(
         fontFamily = Jost,
-        fontWeight = FontWeight.Normal,
-        fontSize = 32.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 62.sp,
+        lineHeight = 66.sp
     ),
     headlineMedium = TextStyle(
         fontFamily = Jost,
