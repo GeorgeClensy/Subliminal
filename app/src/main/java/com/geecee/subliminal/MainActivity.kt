@@ -128,6 +128,8 @@ fun MainNavigation() {
                         selected = selectedItem == index,
                         onClick = {
                             selectedItem = index
+
+                            //Navigate to the page corresponding to the clicked index
                             navController.navigate(
                                 when (selectedItem) {
                                     0 -> "Home"

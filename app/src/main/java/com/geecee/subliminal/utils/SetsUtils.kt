@@ -74,15 +74,14 @@ fun deleteSet(context: Context, title: String) {
     saveSets(context, updatedSets) // Save the updated list back to SharedPreferences
 }
 
-//TODO: look into the title stuff here
 fun duplicateSet(context: Context, title: String, newTitle: String? = null, pageSets: MutableState<List<Set>>) {
     val sets = loadSets(context).toMutableList()
 
     val setToDuplicate = sets.find { it.title == title }
     setToDuplicate?.let { originalSet ->
-        // Create a duplicate with a new ID and optional new title
+        // Create a duplicate with a new title
         val duplicatedSet = originalSet.copy(
-            title = newTitle ?: "${originalSet.title} (Copy)"
+            title = newTitle ?: "${originalSet.title} (Copy)" // If new title is null then generate a name for me
         )
 
         sets.add(duplicatedSet)

@@ -151,8 +151,9 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val showRenameDialog = remember { mutableStateOf(false) }
 
+    // Rename the set
+    val showRenameDialog = remember { mutableStateOf(false) }
     if (showRenameDialog.value) {
         TextboxDialog(
             showRenameDialog,
@@ -165,6 +166,7 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
             refreshSets(context,sets)
         }
     }
+
     Column(
         Modifier
             .clip(MaterialTheme.shapes.extraLarge)
@@ -210,17 +212,20 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
                 ) {
                     DropdownMenuItem(onClick = {
                         showRenameDialog.value = true
+                        menuExpanded = false
                     }, text = {
                         Text(stringResource(R.string.rename))
                     })
                     DropdownMenuItem(onClick = {
                         deleteSet(context, set.title)
                         refreshSets(context,sets)
+                        menuExpanded = false
                     }, text = {
                         Text(stringResource(R.string.delete))
                     })
                     DropdownMenuItem(onClick = {
                         duplicateSet(context, set.title, context.resources.getString(R.string.copy_of) + set.title, sets)
+                        menuExpanded = false
                     }, text = {
                         Text(stringResource(R.string.duplicate))
                     })
