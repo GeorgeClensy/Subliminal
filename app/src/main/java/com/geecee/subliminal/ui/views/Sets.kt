@@ -1,6 +1,7 @@
 package com.geecee.subliminal.ui.views
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.geecee.subliminal.R
 import com.geecee.subliminal.ui.SetPreview
 import com.geecee.subliminal.utils.Set
@@ -26,7 +28,7 @@ fun refreshSets(context: Context, setsState: MutableState<List<Set>>) {
 }
 
 @Composable
-fun SetsPage(sets: MutableState<List<Set>>) {
+fun SetsPage(sets: MutableState<List<Set>>, currentSet: MutableState<Set>, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +54,14 @@ fun SetsPage(sets: MutableState<List<Set>>) {
             }
 
             items(sets.value) { set ->
-                SetPreview(set,sets)
+                SetPreview(
+                    set,
+                    sets,
+                    Modifier.clickable {
+                        navController.navigate("Cards")
+                        currentSet.value = set
+                    }
+                )
 
                 Spacer(Modifier.height(15.dp))
             }

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.geecee.subliminal.utils
 
 import android.content.Context
@@ -10,12 +12,12 @@ import java.util.Date
 data class Set(
     var title: String,
     val lastRevised: Date? = null,
-    val cards: List<Card> = listOf() // Store cards directly in the set
+    var cards: List<Card> = listOf() // Store cards directly in the set
 )
 
 data class Card(
-    val content: String,
-    val contentAnswer: String? = null
+    var content: String,
+    var contentAnswer: String? = null
 )
 
 fun saveSets(context: Context, sets: List<Set>) {
@@ -89,3 +91,62 @@ fun duplicateSet(context: Context, title: String, newTitle: String? = null, page
         refreshSets(context,pageSets)
     }
 }
+
+//Cards
+
+fun getCardsInSet(context: Context, setTitle: String): List<Card> {
+    val sets = loadSets(context)
+    val set = sets.find { it.title == setTitle }
+    return set?.cards ?: emptyList() // Return the list of cards, or an empty list if not found
+}
+
+
+fun addCardToSet(context: Context, setTitle: String, content: String, contentAnswer: String? = null) {
+    val sets = loadSets(context).toMutableList()
+    val set = sets.find { it.title == setTitle }
+
+    set?.let {
+        val newCard = Card(content = content, contentAnswer = contentAnswer)
+        it.cards += newCard // Add the new card to the existing list
+        saveSets(context, sets)
+    }
+}
+
+fun editCardInSet(context: Context, setTitle: String, cardContent: String, newContent: String, newAnswer: String?) {
+    val sets = loadSets(context).toMutableList()
+    val set = sets.find { it.title == setTitle }
+
+    set?.let {
+        val cardToEdit = it.cards.find { card -> card.content == cardContent }
+        cardToEdit?.let { card ->
+            card.content = newContent
+            card.contentAnswer = newAnswer
+            saveSets(context, sets)
+        }
+    }
+}
+
+fun duplicateCardInSet(context: Context, setTitle: String, cardContent: String) {
+    val sets = loadSets(context).toMutableList()
+    val set = sets.find { it.title == setTitle }
+
+    set?.let {
+        val cardToDuplicate = it.cards.find { card -> card.content == cardContent }
+        cardToDuplicate?.let { card ->
+            val duplicatedCard = card.copy(content = "${card.content} (Copy)")
+            it.cards += duplicatedCard // Add the duplicated card
+            saveSets(context, sets)
+        }
+    }
+}
+
+fun deleteCardFromSet(context: Context, setTitle: String, cardContent: String) {
+    val sets = loadSets(context).toMutableList()
+    val set = sets.find { it.title == setTitle }
+
+    set?.let {
+        it.cards = it.cards.filter { card -> card.content != cardContent } // Remove the card
+        saveSets(context, sets)
+    }
+}
+

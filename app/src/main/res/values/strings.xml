@@ -27,7 +27,16 @@
     <string name="duplicate">Duplicate</string>
     <string name="copy_of">Copy Of </string>
 
+    <!-- Cards Screen -->
+    <string name="card">Card</string>
+    <string name="edit">Edit</string>
+    <string name="edit_card">Edit Card</string>
+    <string name="new_card">New card</string>
+    <string name="card_content">Card content</string>
+    <string name="card_answer">Card answer (optional)</string>
+
     <!-- Misc -->
     <string name="type_here_..">Type here..</string>
     <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
 </resources>

@@ -49,9 +49,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.geecee.subliminal.ui.TextboxDialog
 import com.geecee.subliminal.ui.theme.SubliminalTheme
+import com.geecee.subliminal.ui.views.CardsPage
 import com.geecee.subliminal.ui.views.HomePage
 import com.geecee.subliminal.ui.views.SetsPage
 import com.geecee.subliminal.ui.views.refreshSets
+import com.geecee.subliminal.utils.Set
 import com.geecee.subliminal.utils.createSet
 import com.geecee.subliminal.utils.loadSets
 import kotlinx.coroutines.launch
@@ -102,6 +104,17 @@ fun MainNavigation() {
     //Sets creation
     val showNewSetDialog = remember { mutableStateOf(false) }
     val sets = remember { mutableStateOf(loadSets(context)) }
+    val currentSet = remember {
+        mutableStateOf(
+            Set(
+                "",
+                null,
+                listOf(
+
+                )
+            )
+        )
+    }
 
     //Main app scaffold
     Scaffold(
@@ -109,37 +122,43 @@ fun MainNavigation() {
             //No topBar
         },
         bottomBar = {
-            NavigationBar {
-                items.forEachIndexed { index, item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
-                                contentDescription = item
-                            )
-                        },
-                        label = {
-                            Text(
-                                item,
-                                style = com.geecee.subliminal.ui.theme.Typography.bodyMedium
-                            )
-                        },
-                        alwaysShowLabel = false,
-                        selected = selectedItem == index,
-                        onClick = {
-                            selectedItem = index
+            AnimatedVisibility(
+                visible = currentRoute != "Cards",
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                NavigationBar {
+                    items.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    if (selectedItem == index) selectedIcons[index] else unselectedIcons[index],
+                                    contentDescription = item
+                                )
+                            },
+                            label = {
+                                Text(
+                                    item,
+                                    style = com.geecee.subliminal.ui.theme.Typography.bodyMedium
+                                )
+                            },
+                            alwaysShowLabel = false,
+                            selected = selectedItem == index,
+                            onClick = {
+                                selectedItem = index
 
-                            //Navigate to the page corresponding to the clicked index
-                            navController.navigate(
-                                when (selectedItem) {
-                                    0 -> "Home"
-                                    1 -> "Sets"
-                                    2 -> "Start"
-                                    else -> "Home"
-                                }
-                            )
-                        }
-                    )
+                                //Navigate to the page corresponding to the clicked index
+                                navController.navigate(
+                                    when (selectedItem) {
+                                        0 -> "Home"
+                                        1 -> "Sets"
+                                        2 -> "Start"
+                                        else -> "Home"
+                                    }
+                                )
+                            }
+                        )
+                    }
                 }
             }
         },
@@ -163,22 +182,27 @@ fun MainNavigation() {
     ) { innerPadding ->
         NavHost(navController, "Home", Modifier.padding(innerPadding)) {
             composable("Home",
-                enterTransition = { fadeIn(tween(300)) },
-                exitTransition = { fadeOut(tween(300)) }) {
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition = { fadeOut(tween(500)) }) {
                 HomePage()
             }
             composable("Sets",
-                enterTransition = { fadeIn(tween(300)) },
-                exitTransition = { fadeOut(tween(300)) }) {
-                SetsPage(sets)
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition = { fadeOut(tween(500)) }) {
+                SetsPage(sets, currentSet, navController)
+            }
+            composable("Cards",
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition = { fadeOut(tween(500)) }) {
+                CardsPage(currentSet, navController, sets, snackbarHostState)
             }
             composable("Options",
-                enterTransition = { fadeIn(tween(300)) },
-                exitTransition = { fadeOut(tween(300)) }) {
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition = { fadeOut(tween(500)) }) {
             }
             composable("Start",
-                enterTransition = { fadeIn(tween(300)) },
-                exitTransition = { fadeOut(tween(300)) }) {
+                enterTransition = { fadeIn(tween(500)) },
+                exitTransition = { fadeOut(tween(500)) }) {
             }
         }
 

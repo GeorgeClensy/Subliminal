@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
@@ -35,6 +36,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +52,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.geecee.subliminal.R
 import com.geecee.subliminal.ui.theme.SubliminalTheme
+import com.geecee.subliminal.ui.views.refreshCards
 import com.geecee.subliminal.ui.views.refreshSets
+import com.geecee.subliminal.utils.Card
 import com.geecee.subliminal.utils.Set
+import com.geecee.subliminal.utils.deleteCardFromSet
 import com.geecee.subliminal.utils.deleteSet
 import com.geecee.subliminal.utils.duplicateSet
+import com.geecee.subliminal.utils.editCardInSet
 import com.geecee.subliminal.utils.renameSet
+import kotlinx.coroutines.launch
 
 data class CarouselItem(
     val id: Int,
@@ -147,7 +154,7 @@ fun PrevHomeScreenMessage() {
 }
 
 @Composable
-fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
+fun SetPreview(set: Set, sets: MutableState<List<Set>>, modifier: Modifier) {
     var menuExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -163,15 +170,17 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
             stringResource(R.string.cancel)
         ) { newName ->
             renameSet(context, set.title, newName)
-            refreshSets(context,sets)
+            refreshSets(context, sets)
         }
     }
 
     Column(
-        Modifier
-            .clip(MaterialTheme.shapes.extraLarge)
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+        modifier.then(
+            Modifier
+                .clip(MaterialTheme.shapes.extraLarge)
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+        )
     ) {
         Box(
             Modifier
@@ -182,7 +191,7 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
 
             // Left-aligned text
             Text(
-                trimTo25Characters(set.title),
+                trimString(set.title,25),
                 Modifier.align(Alignment.CenterStart),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -218,13 +227,18 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
                     })
                     DropdownMenuItem(onClick = {
                         deleteSet(context, set.title)
-                        refreshSets(context,sets)
+                        refreshSets(context, sets)
                         menuExpanded = false
                     }, text = {
                         Text(stringResource(R.string.delete))
                     })
                     DropdownMenuItem(onClick = {
-                        duplicateSet(context, set.title, context.resources.getString(R.string.copy_of) + set.title, sets)
+                        duplicateSet(
+                            context,
+                            set.title,
+                            context.resources.getString(R.string.copy_of) + set.title,
+                            sets
+                        )
                         menuExpanded = false
                     }, text = {
                         Text(stringResource(R.string.duplicate))
@@ -234,12 +248,18 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
         }
 
         var mainText = ""
+        var i = 1
         set.cards.forEach { card ->
-            mainText += card.content + ", "
+            mainText += if (i == set.cards.size) {
+                card.content
+            } else {
+                card.content + ", "
+            }
+            i++
         }
 
         Text(
-            mainText,
+            trimString(mainText,100),
             Modifier.padding(20.dp, 0.dp, 20.dp, 20.dp),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Normal,
@@ -306,10 +326,202 @@ fun PrevTextboxDialog() {
     }
 }
 
-fun trimTo25Characters(text: String): String {
-    return if (text.length > 25) {
-        text.take(25) + "..."
+fun trimString(text: String, number: Int): String {
+    return if (text.length > number) {
+        text.take(number) + "..."
     } else {
         text
     }
+}
+
+@Composable
+fun Card(
+    card: Card, title: String, set: Set, cards: MutableState<List<Card>>,
+    snackbarHostState: SnackbarHostState
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val showEditDialog = remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        Modifier
+            .clip(MaterialTheme.shapes.extraLarge)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp, 20.dp, 20.dp, 10.dp)
+        ) {
+
+
+            // Left-aligned text
+            Text(
+                title,
+                Modifier.align(Alignment.CenterStart),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            // Right-aligned icon
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+            ) {
+                IconButton(
+                    { menuExpanded = true },
+                    modifier = Modifier
+                        .size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
+                ) {
+                    DropdownMenuItem(onClick = {
+                        menuExpanded = false
+                        showEditDialog.value = true
+                        refreshCards(context, cards, set.title)
+                    }, text = {
+                        Text(stringResource(R.string.edit))
+                    })
+                    DropdownMenuItem(onClick = {
+                        menuExpanded = false
+                        deleteCardFromSet(context, set.title, card.content)
+                        refreshCards(context, cards, set.title)
+                    }, text = {
+                        Text(stringResource(R.string.delete))
+                    })
+                }
+            }
+        }
+
+        Column {
+            Text(
+                card.content,
+                Modifier.padding(20.dp, 0.dp, 20.dp, 20.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
+                color = Color.White
+            )
+
+            if (card.contentAnswer != "") {
+                Text(
+                    card.contentAnswer!!,
+                    Modifier.padding(20.dp, 0.dp, 20.dp, 20.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Normal,
+                    color = Color.White
+                )
+            }
+        }
+    }
+
+    if (showEditDialog.value) {
+        card.contentAnswer?.let {
+            CardEditor(
+                showEditDialog,
+                stringResource(R.string.edit_card),
+                card.content,
+                it,
+                stringResource(R.string.edit),
+                stringResource(R.string.cancel),
+                card,
+                snackbarHostState
+            ) { newContent ->
+                editCardInSet(
+                    context,
+                    set.title,
+                    card.content,
+                    newContent.content,
+                    newContent.contentAnswer
+                )
+
+                refreshCards(context, cards, set.title)
+            }
+        }
+    }
+}
+
+@Composable
+fun CardEditor(
+    showDialog: MutableState<Boolean>,
+    title: String,
+    placeholder: String,
+    answerPlaceholder: String,
+    submit: String,
+    cancel: String,
+    inputCard: Card,
+    snackbarHostState: SnackbarHostState,
+    onSubmit: (card: Card) -> Unit
+) {
+    var textState by remember { mutableStateOf(TextFieldValue(inputCard.content)) }
+    var ansTextState by remember { mutableStateOf(TextFieldValue("")) }
+    val coroutineScope = rememberCoroutineScope()
+
+    if (inputCard.contentAnswer != null) {
+        ansTextState = TextFieldValue(inputCard.contentAnswer!!)
+    }
+
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        title = {
+            Text(
+                title,
+                Modifier,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                TextField(
+                    value = textState,
+                    onValueChange = { textState = it },
+                    placeholder = { Text(placeholder) },
+                    modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 15.dp)
+                )
+
+                TextField(
+                    value = ansTextState,
+                    onValueChange = { ansTextState = it },
+                    placeholder = { Text(answerPlaceholder) }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (textState.text == "") {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = "Please enter main content",
+                            actionLabel = "Ok"
+                        )
+                    }
+                } else {
+                    showDialog.value = false
+                    onSubmit(Card(textState.text, ansTextState.text))
+                }
+            }) {
+                Text(submit)
+            }
+        },
+        dismissButton = {
+            Button(onClick = {
+                showDialog.value = false
+            }) {
+                Text(cancel)
+            }
+        }
+    )
 }
