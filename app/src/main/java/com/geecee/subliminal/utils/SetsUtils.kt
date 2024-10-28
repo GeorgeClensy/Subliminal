@@ -74,6 +74,7 @@ fun deleteSet(context: Context, title: String) {
     saveSets(context, updatedSets) // Save the updated list back to SharedPreferences
 }
 
+//TODO: look into the title stuff here
 fun duplicateSet(context: Context, title: String, newTitle: String? = null, pageSets: MutableState<List<Set>>) {
     val sets = loadSets(context).toMutableList()
 

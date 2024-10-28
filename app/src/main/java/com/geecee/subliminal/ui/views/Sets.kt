@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.geecee.subliminal.R
 import com.geecee.subliminal.ui.SetPreview
 import com.geecee.subliminal.utils.Set
 import com.geecee.subliminal.utils.loadSets
@@ -39,7 +41,7 @@ fun SetsPage(sets: MutableState<List<Set>>) {
 
             item {
                 Text(
-                    "Manage Sets",
+                    stringResource(R.string.manage_sets),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )

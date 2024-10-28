@@ -1,4 +1,33 @@
 <resources>
-    <string name="app_name">Subliminal</string>
+    <string name="app_name" translatable="false">Subliminal</string>
+
+    <!-- Greeting -->
     <string name="good_evening">Good Evening</string>
+    <string name="good">Good</string>
+    <string name="morning">morning</string>
+    <string name="afternoon">afternoon</string>
+    <string name="evening">evening</string>
+
+    <!-- Home -->
+    <string name="recent_sets">Recent sets</string>
+    <string name="recommended">Recommended</string>
+    <string name="welcome_to_subliminal">Welcome to Subliminal</string>
+    <string name="click_the_add_button_to_get_started">Click the add button to get started.</string>
+
+    <!-- Navigation -->
+    <string name="Home">Home</string>
+    <string name="Sets">Sets</string>
+    <string name="Start">Start</string>
+
+    <!-- Sets Screen -->
+    <string name="manage_sets">Manage Sets</string>
+    <string name="rename_Set">Rename Set</string>
+    <string name="rename">Rename</string>
+    <string name="delete">Delete</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="copy_of">Copy Of </string>
+
+    <!-- Misc -->
+    <string name="type_here_..">Type here..</string>
+    <string name="cancel">Cancel</string>
 </resources>

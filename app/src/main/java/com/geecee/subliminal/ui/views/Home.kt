@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,12 +56,12 @@ fun HomePage() {
             Spacer(Modifier.height(80.dp))
 
             Text(
-                "Good",
+                stringResource(R.string.good),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                getTimeOfDayGreeting(),
+                getTimeOfDayGreeting(stringResource(R.string.morning),stringResource(R.string.afternoon),stringResource(R.string.evening)),
                 Modifier.offset(0.dp, (-15).dp),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold
@@ -69,7 +70,7 @@ fun HomePage() {
             Spacer(Modifier.height(25.dp))
 
             Text(
-                "Recent Sets",
+                stringResource(R.string.recent_sets),
                 style = MaterialTheme.typography.headlineSmall
             )
 
@@ -88,12 +89,12 @@ fun HomePage() {
 
             Spacer(Modifier.height(25.dp))
 
-            HomeScreenMessage("Welcome to Subliminal", "Click the add button to get started.")
+            HomeScreenMessage(stringResource(R.string.welcome_to_subliminal), stringResource(R.string.click_the_add_button_to_get_started))
 
             Spacer(Modifier.height(20.dp))
 
             Text(
-                "Recommended",
+                stringResource(R.string.recommended),
                 style = MaterialTheme.typography.headlineSmall
             )
 

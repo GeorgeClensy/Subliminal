@@ -17,9 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -38,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -76,17 +77,24 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainNavigation() {
+    //Context
     val context = LocalContext.current
 
+    //Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    //Navigation
     var selectedItem by remember { mutableIntStateOf(0) }
-    val items = listOf("Home", "Sets", "Options")
+    val items = listOf(
+        stringResource(R.string.Home),
+        stringResource(R.string.Sets),
+        stringResource(R.string.Start)
+    )
     val selectedIcons =
-        listOf(Icons.Filled.Home, Icons.AutoMirrored.Filled.List, Icons.Filled.Settings)
+        listOf(Icons.Filled.Home, Icons.AutoMirrored.Filled.List, Icons.Filled.PlayArrow)
     val unselectedIcons =
-        listOf(Icons.Outlined.Home, Icons.AutoMirrored.Outlined.List, Icons.Outlined.Settings)
+        listOf(Icons.Outlined.Home, Icons.AutoMirrored.Outlined.List, Icons.Outlined.PlayArrow)
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -95,8 +103,11 @@ fun MainNavigation() {
     val showNewSetDialog = remember { mutableStateOf(false) }
     val sets = remember { mutableStateOf(loadSets(context)) }
 
+    //Main app scaffold
     Scaffold(
-        topBar = {},
+        topBar = {
+            //No topBar
+        },
         bottomBar = {
             NavigationBar {
                 items.forEachIndexed { index, item ->
@@ -117,7 +128,14 @@ fun MainNavigation() {
                         selected = selectedItem == index,
                         onClick = {
                             selectedItem = index
-                            navController.navigate(item)
+                            navController.navigate(
+                                when (selectedItem) {
+                                    0 -> "Home"
+                                    1 -> "Sets"
+                                    2 -> "Start"
+                                    else -> "Home"
+                                }
+                            )
                         }
                     )
                 }
@@ -131,7 +149,7 @@ fun MainNavigation() {
             ) {
                 FloatingActionButton(onClick = {
                     showNewSetDialog.value = true
-                    refreshSets(context,sets)
+                    refreshSets(context, sets)
                 }) {
                     Icon(Icons.Rounded.Add, contentDescription = "Add")
                 }
@@ -156,8 +174,13 @@ fun MainNavigation() {
                 enterTransition = { fadeIn(tween(300)) },
                 exitTransition = { fadeOut(tween(300)) }) {
             }
+            composable("Start",
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) }) {
+            }
         }
 
+        //New set dialog
         if (showNewSetDialog.value) {
             TextboxDialog(
                 showNewSetDialog,
@@ -176,8 +199,7 @@ fun MainNavigation() {
 
                 if (!alreadyExists) {
                     createSet(context, output, null)
-                }
-                else{
+                } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
                             message = "Set with this name already exists",
@@ -186,7 +208,7 @@ fun MainNavigation() {
                     }
                 }
 
-                refreshSets(context,sets)
+                refreshSets(context, sets)
             }
         }
     }

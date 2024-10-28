@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,7 +62,7 @@ data class CarouselItem(
     val onClick: () -> Unit
 )
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun Carousel(items: List<CarouselItem>) {
     HorizontalMultiBrowseCarousel(
@@ -155,10 +156,10 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
     if (showRenameDialog.value) {
         TextboxDialog(
             showRenameDialog,
-            "Rename Set",
-            "Type here..",
-            "Rename",
-            "Cancel"
+            stringResource(R.string.rename_Set),
+            stringResource(R.string.type_here___),
+            stringResource(R.string.rename),
+            stringResource(R.string.cancel)
         ) { newName ->
             renameSet(context, set.title, newName)
             refreshSets(context,sets)
@@ -210,18 +211,18 @@ fun SetPreview(set: Set,sets: MutableState<List<Set>>) {
                     DropdownMenuItem(onClick = {
                         showRenameDialog.value = true
                     }, text = {
-                        Text("Rename")
+                        Text(stringResource(R.string.rename))
                     })
                     DropdownMenuItem(onClick = {
                         deleteSet(context, set.title)
                         refreshSets(context,sets)
                     }, text = {
-                        Text("Delete")
+                        Text(stringResource(R.string.delete))
                     })
                     DropdownMenuItem(onClick = {
-                        duplicateSet(context, set.title, "Copy Of " + set.title, sets)
+                        duplicateSet(context, set.title, context.resources.getString(R.string.copy_of) + set.title, sets)
                     }, text = {
-                        Text("Duplicate")
+                        Text(stringResource(R.string.duplicate))
                     })
                 }
             }
