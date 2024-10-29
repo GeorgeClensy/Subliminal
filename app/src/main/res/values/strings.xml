@@ -35,6 +35,10 @@
     <string name="card_content">Card content</string>
     <string name="card_answer">Card answer (optional)</string>
 
+    <!-- Start Screen-->
+    <string name="start">Start</string>
+    <string name="choose_sets">Choose Sets</string>
+
     <!-- Misc -->
     <string name="type_here_..">Type here..</string>
     <string name="cancel">Cancel</string>

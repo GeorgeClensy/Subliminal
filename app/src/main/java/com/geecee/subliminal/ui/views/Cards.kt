@@ -151,7 +151,7 @@ fun CardsPage(
                     com.geecee.subliminal.ui.Card(
                         card,
                         context.resources.getString(R.string.card),
-                        set.value,
+                        set,
                         cards,
                         snackbarHostState
                     )
@@ -174,7 +174,8 @@ fun CardsPage(
                     stringResource(R.string.done),
                     stringResource(R.string.cancel),
                     newCard,
-                    snackbarHostState
+                    snackbarHostState,
+                    set
                 ) { card ->
                     newCard = card
                     addCardToSet(

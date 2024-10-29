@@ -6,6 +6,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +14,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,6 +64,7 @@ import com.geecee.subliminal.utils.deleteCardFromSet
 import com.geecee.subliminal.utils.deleteSet
 import com.geecee.subliminal.utils.duplicateSet
 import com.geecee.subliminal.utils.editCardInSet
+import com.geecee.subliminal.utils.getSetByTitle
 import com.geecee.subliminal.utils.renameSet
 import kotlinx.coroutines.launch
 
@@ -72,26 +77,30 @@ data class CarouselItem(
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun Carousel(items: List<CarouselItem>) {
-    HorizontalMultiBrowseCarousel(
-        state = rememberCarouselState { items.count() },
-        modifier = Modifier.fillMaxWidth(),
-        preferredItemWidth = 186.dp,
-        itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 0.dp)
-    ) { i ->
-        val item = items[i]
+    if (items.isNotEmpty()) {
+        HorizontalMultiBrowseCarousel(
+            state = rememberCarouselState { items.count() },
+            modifier = Modifier.fillMaxWidth(),
+            preferredItemWidth = 186.dp,
+            itemSpacing = 8.dp,
+            contentPadding = PaddingValues(horizontal = 0.dp)
+        ) { i ->
+            val item = items[i]
 
-        Image(
-            modifier = Modifier
-                .height(200.dp)
-                .maskClip(MaterialTheme.shapes.extraLarge)
-                .combinedClickable(
-                    onClick = { item.onClick }, onLongClickLabel = {}.toString(), onLongClick = {}
-                ),
-            painter = painterResource(id = item.imageResId),
-            contentDescription = "Carousel Item",
-            contentScale = ContentScale.Crop
-        )
+            Image(
+                modifier = Modifier
+                    .height(200.dp)
+                    .maskClip(MaterialTheme.shapes.extraLarge)
+                    .combinedClickable(
+                        onClick = { item.onClick },
+                        onLongClickLabel = {}.toString(),
+                        onLongClick = {}
+                    ),
+                painter = painterResource(id = item.imageResId),
+                contentDescription = "Carousel Item",
+                contentScale = ContentScale.Crop
+            )
+        }
     }
 }
 
@@ -191,7 +200,7 @@ fun SetPreview(set: Set, sets: MutableState<List<Set>>, modifier: Modifier) {
 
             // Left-aligned text
             Text(
-                trimString(set.title,25),
+                trimString(set.title, 25),
                 Modifier.align(Alignment.CenterStart),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -259,7 +268,7 @@ fun SetPreview(set: Set, sets: MutableState<List<Set>>, modifier: Modifier) {
         }
 
         Text(
-            trimString(mainText,100),
+            trimString(mainText, 100),
             Modifier.padding(20.dp, 0.dp, 20.dp, 20.dp),
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Normal,
@@ -336,7 +345,7 @@ fun trimString(text: String, number: Int): String {
 
 @Composable
 fun Card(
-    card: Card, title: String, set: Set, cards: MutableState<List<Card>>,
+    card: Card, title: String, set: MutableState<Set>, cards: MutableState<List<Card>>,
     snackbarHostState: SnackbarHostState
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -391,14 +400,14 @@ fun Card(
                     DropdownMenuItem(onClick = {
                         menuExpanded = false
                         showEditDialog.value = true
-                        refreshCards(context, cards, set.title)
+                        refreshCards(context, cards, set.value.title)
                     }, text = {
                         Text(stringResource(R.string.edit))
                     })
                     DropdownMenuItem(onClick = {
                         menuExpanded = false
-                        deleteCardFromSet(context, set.title, card.content)
-                        refreshCards(context, cards, set.title)
+                        deleteCardFromSet(context, set.value.title, card.content)
+                        refreshCards(context, cards, set.value.title)
                     }, text = {
                         Text(stringResource(R.string.delete))
                     })
@@ -437,17 +446,18 @@ fun Card(
                 stringResource(R.string.edit),
                 stringResource(R.string.cancel),
                 card,
-                snackbarHostState
+                snackbarHostState,
+                set
             ) { newContent ->
                 editCardInSet(
                     context,
-                    set.title,
+                    set.value.title,
                     card.content,
                     newContent.content,
                     newContent.contentAnswer
                 )
 
-                refreshCards(context, cards, set.title)
+                refreshCards(context, cards, set.value.title)
             }
         }
     }
@@ -463,8 +473,10 @@ fun CardEditor(
     cancel: String,
     inputCard: Card,
     snackbarHostState: SnackbarHostState,
+    set: MutableState<Set>,
     onSubmit: (card: Card) -> Unit
 ) {
+    val context = LocalContext.current
     var textState by remember { mutableStateOf(TextFieldValue(inputCard.content)) }
     var ansTextState by remember { mutableStateOf(TextFieldValue("")) }
     val coroutineScope = rememberCoroutineScope()
@@ -501,11 +513,29 @@ fun CardEditor(
         },
         confirmButton = {
             Button(onClick = {
+                set.value = getSetByTitle(context, set.value.title)
+
+
+                var alreadyExists = false
+
+                set.value.cards.forEach { card ->
+                    if (card.content == textState.text) {
+                        alreadyExists = true
+                    }
+                }
+
                 if (textState.text == "") {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(
                             message = "Please enter main content",
                             actionLabel = "Ok"
+                        )
+                    }
+                } else if (alreadyExists) {
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar(
+                            "Card with this content already exists",
+                            "Ok"
                         )
                     }
                 } else {
@@ -524,4 +554,69 @@ fun CardEditor(
             }
         }
     )
+}
+
+@Composable
+fun SetSelector(set: Set, checkChanged: (checked: Boolean) -> Unit) {
+    val clicked = remember { mutableStateOf(false) }
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .offset((-14).dp, 0.dp)
+    ) {
+        Checkbox(clicked.value, { checked ->
+            clicked.value = checked
+            checkChanged(checked)
+        })
+        Text(
+            text = trimString(set.title, 27),
+            Modifier.padding(0.dp, 8.dp),
+            color = Color.White,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            style = MaterialTheme.typography.titleLarge
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PrevSetSelector() {
+    SubliminalTheme {
+        SetSelector(Set("Title", null, listOf())) {}
+    }
+}
+
+@Composable
+fun AllSets(clickable: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .clickable {
+                clickable()
+            }) {
+        Text(
+            text = "All sets",
+            Modifier.padding(0.dp, 8.dp),
+            color = Color.White,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            style = MaterialTheme.typography.titleLarge
+        )
+        Icon(
+            Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+            "",
+            Modifier.align(Alignment.CenterEnd),
+            Color.White
+        )
+    }
+}
+
+@Preview
+@Composable
+fun PrevAllSets() {
+    SubliminalTheme {
+        AllSets {}
+    }
 }

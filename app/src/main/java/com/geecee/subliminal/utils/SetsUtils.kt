@@ -92,6 +92,11 @@ fun duplicateSet(context: Context, title: String, newTitle: String? = null, page
     }
 }
 
+fun getSetByTitle(context: Context, title: String): Set {
+    val sets = loadSets(context)
+    return sets.find { it.title == title } ?: Set(title = "", lastRevised = null, cards = listOf())
+}
+
 //Cards
 
 fun getCardsInSet(context: Context, setTitle: String): List<Card> {
