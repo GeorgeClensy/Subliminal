@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
+@file:Suppress("unused")
 
 package com.geecee.subliminal.ui
 
@@ -12,11 +13,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Info
@@ -104,7 +106,7 @@ fun Carousel(items: List<CarouselItem>) {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun PrevCarousel() {
     val items =
@@ -151,7 +153,7 @@ fun HomeScreenMessage(title: String, message: String) {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun PrevHomeScreenMessage() {
     SubliminalTheme {
@@ -325,7 +327,7 @@ fun TextboxDialog(
     )
 }
 
-@Preview
+//@Preview
 @Composable
 fun PrevTextboxDialog() {
     SubliminalTheme {
@@ -557,14 +559,17 @@ fun CardEditor(
 }
 
 @Composable
-fun SetSelector(set: Set, checkChanged: (checked: Boolean) -> Unit) {
+fun SetSelector(set: Set, checked: Boolean?, checkChanged: (checked: Boolean) -> Unit) {
     val clicked = remember { mutableStateOf(false) }
+
+    if (checked == true) {
+        clicked.value = checked
+    }
 
     Row(
         Modifier
             .fillMaxWidth()
             .height(50.dp)
-            .offset((-14).dp, 0.dp)
     ) {
         Checkbox(clicked.value, { checked ->
             clicked.value = checked
@@ -580,11 +585,11 @@ fun SetSelector(set: Set, checkChanged: (checked: Boolean) -> Unit) {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun PrevSetSelector() {
     SubliminalTheme {
-        SetSelector(Set("Title", null, listOf())) {}
+        SetSelector(Set("Title", null, listOf()), false) {}
     }
 }
 
@@ -613,10 +618,96 @@ fun AllSets(clickable: () -> Unit) {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun PrevAllSets() {
     SubliminalTheme {
         AllSets {}
+    }
+}
+
+data class SetScrollListItemInfo(
+    val set: Set,
+    var checked: Boolean,
+    var placeholderImage: Int,
+)
+
+@Composable
+fun SetsScrollListItem(
+    setsScrollListItemInfo: SetScrollListItemInfo,
+    onCheckChanged: (checked: Boolean) -> Unit
+) {
+    var checkedState by remember { mutableStateOf(setsScrollListItemInfo.checked) }
+    Box(
+        modifier = Modifier
+            .width(200.dp)
+            .height(200.dp)
+            .fillMaxSize()
+            .clip(MaterialTheme.shapes.extraLarge)
+            .clickable {
+                checkedState = !checkedState
+            }
+    ) {
+
+
+        Image(
+            painter = painterResource(
+                id = when (setsScrollListItemInfo.placeholderImage) {
+                    1 -> R.drawable.placeholdergradient01
+                    2 -> R.drawable.placeholdergradient02
+                    3 -> R.drawable.placeholdergradient03
+                    4 -> R.drawable.placeholdergradient04
+                    5 -> R.drawable.placeholdergradient05
+                    else -> R.drawable.placeholdergradient03
+                }
+            ),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    checkedState = !checkedState
+                }
+                .align(Alignment.BottomStart)
+                .padding(15.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(checked = checkedState, onCheckedChange = {
+                checkedState = it
+                onCheckChanged(it)
+            }
+            )
+
+            Text(
+                text = setsScrollListItemInfo.set.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+    }
+}
+
+
+@Preview
+@Composable
+fun PrevSetsScrollListItem() {
+    SubliminalTheme {
+        val setInfo = SetScrollListItemInfo(
+            Set(
+                "A set with a very long name",
+                null
+            ),
+            false,
+            1
+        )
+
+        SetsScrollListItem(
+            setInfo,
+        ) {}
     }
 }
