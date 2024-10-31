@@ -1,4 +1,4 @@
-![Banner](https://github.com/georgeclensy/subliminal/blob/master/branding/LargeTitle.png)
+![Banner](https://github.com/georgeclensy/subliminal/blob/main/branding/LargeTitle.png)
 
 # Subliminal
 Study subconsciously
